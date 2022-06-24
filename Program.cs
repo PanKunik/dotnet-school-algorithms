@@ -1,62 +1,36 @@
-﻿var input = args[0];
+﻿var input = args.Length == 0 ? "xyz" : string.Concat(args);
 string revertedInput = new(input.Reverse().ToArray());
-int[] mask = new int[input.Length];
-mask[^1] = 1;
-var stringifiedControlMask = StringifyMask();
+int mask = 0b1;
+var words = new List<string>();
+var control = StringifyBinaryMask();
 
-while(true)
+while(mask < (int)Math.Pow(2, input.Length))
 {
-    PrintMaskedString();
-    ShiftMask();
+    words.Add(new string(MaskedString().Reverse().ToArray()));
+    mask++;
 
-    var stringifiedMask = StringifyMask();
-    if(stringifiedMask.Equals(stringifiedControlMask))
+    var stringifiedMask = StringifyBinaryMask();
+    if(stringifiedMask.Equals(control))
     {
-        if(MaskContainsOnlyOnes())
-            break;
-
-        int sumOfOnes = mask.Sum() + 1;
-        mask = new int[mask.Length];
-
-        for(int i = 0; i < sumOfOnes; i++)
-            mask[mask.Length - i - 1] = 1;
-
-        stringifiedControlMask = StringifyMask();
+        control = StringifyBinaryMask();
     }
 }
 
-string StringifyMask()
-    => string.Join("", mask);
+foreach(var word in words.OrderBy(x => x.Length).Distinct())
+    Console.WriteLine(word);
 
-void PrintMaskedString()
-{
-    Console.WriteLine(new string(MaskedString().Reverse().ToArray()));
-}
+string StringifyBinaryMask()
+    => Convert.ToString(mask, toBase: 2).PadLeft(input.Length, '0');
 
 string MaskedString()
 {
     string result = "";
-
-    for(int i = 0; i < mask.Length; i++)
+    var maskString = StringifyBinaryMask();
+    for(int i = 0; i < maskString.Length; i++)
     {
-        if(mask[i] == 1)
+        if(maskString[i].Equals('1'))
             result += revertedInput[i];
     }
 
     return result;
 }
-
-void ShiftMask()
-{
-    var first = mask[0];
-
-    for(int i = 0; i < mask.Length - 1; i++)
-    {
-        mask[i] = mask[i + 1];
-    }
-
-    mask[^1] = first;
-}
-
-bool MaskContainsOnlyOnes()
-    => mask.Sum() == mask.Length;
